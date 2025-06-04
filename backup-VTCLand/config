@@ -1,0 +1,9 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = true
+	ignorecase = true
+[remote "origin"]
+	url = https://github.com/LeM9700/VTCLand---Web-App-VTC.git
+	fetch = +refs/*:refs/*
+	mirror = true
