@@ -23,8 +23,9 @@ import AdminReservationsTerminees from './pages/admin/AdminReservationsTerminees
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router basename={process.env.PUBLIC_URL}>
+    <AuthProvider >
+      
       <ToastContainer position="top-right" autoClose={7000} />
 
       <Routes>
@@ -78,8 +79,9 @@ export default function App() {
           </Route>
 
       </Routes>
-    </Router>
+    
     </AuthProvider>
+    </Router>
     
   );
 }
