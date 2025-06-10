@@ -1,3 +1,10 @@
+import useReservationNotifications from "../../hooks/useReservationNotifications";
+
+
 export default function AdminDashboard() {
-  return <h1>🎯 Tableau de bord ADMIN</h1>;
+
+  useReservationNotifications();
+
+  return (<div><h1>🎯 Tableau de bord ADMIN</h1></div>);
+  
 }

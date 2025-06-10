@@ -93,9 +93,20 @@ export default function AdminReservationsTerminees() {
     return () => unsub();
   }, []);
 
+
+  // Fournit "YYYY-MM-DD" à partir d’un objet Date en heure locale
+function formatLocalDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+
+
   const onDateClick = (date) => {
     setSelectedDate(date);
-    const jour = date.toISOString().split("T")[0];
+    const jour = formatLocalDate(date);
     const filtered = reservations
       .filter((r) => r.date === jour)
       .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
@@ -104,7 +115,7 @@ export default function AdminReservationsTerminees() {
 
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      const jourStr = date.toISOString().split("T")[0];
+      const jourStr = formatLocalDate(date);
       if (countByDate[jourStr]) {
         return "relative";
       }
@@ -114,7 +125,7 @@ export default function AdminReservationsTerminees() {
 
   const tileContent = ({ date, view }) => {
     if (view === "month") {
-      const jourStr = date.toISOString().split("T")[0];
+      const jourStr = formatLocalDate(date);
       const nb = countByDate[jourStr] ?? 0;
       if (nb > 0) {
         return (

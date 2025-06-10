@@ -24,7 +24,7 @@ export default function AdminClients() {
     const q = query(
       collection(db, "users"),
       where("role", "==", "client"),
-      orderBy("createdAt", "asc")
+      
     );
 
     const unsub = onSnapshot(

@@ -26,6 +26,8 @@ export default function AjouterChauffeurAdmin() {
     email: "",
     password: "",
     voiture: { marque: "", modele: "", plaque: "" },
+    prixKm: "",
+    capacite: "",
   });
   const [photoProfil, setPhotoProfil] = useState(null);
   const [photosVehicule, setPhotosVehicule] = useState([]);
@@ -46,9 +48,25 @@ export default function AjouterChauffeurAdmin() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const { email, password, name, phone, voiture } = form;
+      const { email, password, name, phone, voiture, prixKm,capacite } = form;
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
+
+      if (
+        !email ||
+        !password ||
+        !name ||
+        !phone ||
+        !voiture.marque ||
+        !voiture.modele ||
+        !voiture.plaque ||
+        !prixKm ||
+        !capacite
+      ) {
+        alert("Veuillez remplir tous les champs obligatoires.");
+        setSubmitting(false);
+        return;
+      }
 
       await setDoc(doc(db, "users", uid), {
         role: "chauffeur",
@@ -71,13 +89,16 @@ export default function AjouterChauffeurAdmin() {
         photoVehiculeUrls.push(url);
       }
 
-      await setDoc(doc(db, "chauffeurs", uid), {
+      await setDoc(doc(db, "users", uid), {
         uid,
         email,
         name,
         phone,
         voiture,
+        prixKm,
+        capacite,
         statut: "indisponible",
+        role:"chauffeur",
         position: { latitude: null, longitude: null },
         createdAt: serverTimestamp(),
         photoProfil: photoProfilUrl,
@@ -118,6 +139,7 @@ export default function AjouterChauffeurAdmin() {
                 placeholder="Jean Dupont"
                 value={form.name}
                 onChange={(e) => handleChange("name", e.target.value)}
+                required
               />
             </div>
 
@@ -128,6 +150,7 @@ export default function AjouterChauffeurAdmin() {
                 placeholder="06 XX XX XX XX"
                 value={form.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
+                required
               />
             </div>
 
@@ -139,6 +162,7 @@ export default function AjouterChauffeurAdmin() {
                 placeholder="exemple@mail.com"
                 value={form.email}
                 onChange={(e) => handleChange("email", e.target.value)}
+                required
               />
             </div>
 
@@ -151,6 +175,7 @@ export default function AjouterChauffeurAdmin() {
                   placeholder="••••••••••"
                   value={form.password}
                   onChange={(e) => handleChange("password", e.target.value)}
+                  required
                 />
                 <Button
                   variant="outline"
@@ -172,6 +197,7 @@ export default function AjouterChauffeurAdmin() {
                 placeholder="Peugeot"
                 value={form.voiture.marque}
                 onChange={(e) => handleChange("voiture.marque", e.target.value)}
+                required
               />
             </div>
             <div className="space-y-1">
@@ -181,6 +207,7 @@ export default function AjouterChauffeurAdmin() {
                 placeholder="208"
                 value={form.voiture.modele}
                 onChange={(e) => handleChange("voiture.modele", e.target.value)}
+                required
               />
             </div>
             <div className="space-y-1">
@@ -190,9 +217,39 @@ export default function AjouterChauffeurAdmin() {
                 placeholder="AB-123-CD"
                 value={form.voiture.plaque}
                 onChange={(e) => handleChange("voiture.plaque", e.target.value)}
+                required
               />
             </div>
           </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+  <div className="space-y-1">
+    <Label htmlFor="prixKm">Prix €/km</Label>
+    <Input
+      id="prixKm"
+      type="number"
+      min="0"
+      step="0.01"
+      placeholder="1.20"
+      value={form.prixKm}
+      onChange={(e) => handleChange("prixKm", e.target.value)}
+      required
+    />
+  </div>
+  <div className="space-y-1">
+    <Label htmlFor="capacite">Capacité passagers</Label>
+    <Input
+      id="capacite"
+      type="number"
+      min="1"
+      max="9"
+      placeholder="4"
+      value={form.capacite}
+      onChange={(e) => handleChange("capacite", e.target.value)}
+      required
+    />
+  </div>
+</div>
 
           <div className="mt-8 space-y-1">
             <Label htmlFor="photoProfil">📸 Photo de profil</Label>
@@ -202,6 +259,7 @@ export default function AjouterChauffeurAdmin() {
               accept="image/*"
               onChange={(e) => setPhotoProfil(e.target.files[0])}
               className="block w-full text-sm text-gray-700"
+              required
             />
             {photoProfil && (
               <img
@@ -221,6 +279,7 @@ export default function AjouterChauffeurAdmin() {
               multiple
               onChange={(e) => setPhotosVehicule([...e.target.files].slice(0, 3))}
               className="block w-full text-sm text-gray-700"
+              required
             />
             {photosVehicule.length > 0 && (
               <div className="mt-2 flex space-x-2">
@@ -236,6 +295,7 @@ export default function AjouterChauffeurAdmin() {
             )}
           </div>
         </CardContent>
+        
 
         <CardFooter className="flex justify-end">
           <Button variant="default" onClick={handleSubmit} disabled={submitting}>
