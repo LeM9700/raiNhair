@@ -14,7 +14,7 @@ import { PhoneCall, User, Calendar as CalendarIcon } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 
-export default function AdminClients() {
+export default function ListClients() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -22,9 +22,8 @@ export default function AdminClients() {
   useEffect(() => {
     // Filtre role == "client" et tri par createdAt asc
     const q = query(
-      collection(db, "users"),
-      where("role", "==", "client"),
-      
+      collection(db, "client"),
+      orderBy("createdAt", "asc")
     );
 
     const unsub = onSnapshot(
@@ -36,7 +35,6 @@ export default function AdminClients() {
             return {
               id: docSnap.id,
               name: data.name || "–",
-              email: data.email || "–",
               phone: data.phone || "–",
               createdAt: data.createdAt || null,
             };

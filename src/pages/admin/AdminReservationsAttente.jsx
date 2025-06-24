@@ -1,16 +1,12 @@
-// src/pages/admin/AdminReservationsAttente.jsx
 import { useEffect, useState } from "react";
 import { Calendar } from "react-calendar";
-import "react-calendar/dist/Calendar.css"; // l’import CSS de base
+import "react-calendar/dist/Calendar.css";
 import {
   BookOpen,
   Clock,
-  MapPin,
-  Users,
   Phone as PhoneIcon,
-  DollarSign,
-  CreditCard,
   PhoneCall,
+  Scissors,
 } from "lucide-react";
 import {
   collection,
@@ -24,7 +20,7 @@ import { db } from "../../firebase/firebaseConfig";
 
 export default function AdminReservationsAttente() {
   const [reservations, setReservations] = useState([]);
-  const [countByDate, setCountByDate] = useState({}); // { "2025-06-05": 3, ... }
+  const [countByDate, setCountByDate] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -45,16 +41,11 @@ export default function AdminReservationsAttente() {
             return {
               id: docSnap.id,
               name: data.name || "Inconnu",
-              phone: data.phone || "Non renseigné",
-              location: data.location || "Non renseigné",
-              destination: data.destination || "Non renseignée",
+              prestation: data.prestation || "Non renseignée",
               date: data.date || "Date inconnue", // Format YYYY-MM-DD
               time: data.time || "Non renseigné",
+              phone: data.phone || "Non renseigné",
               sentAt: data.sentAt || "Non renseigné",
-              prix: data.prix || "0",
-              serviceType: data.serviceType || "Non renseigné",
-              payment: data.payment || "Non renseigné",
-              passengers: data.passengers || "Non renseigné",
               status: data.status || "en attente",
             };
           });
@@ -84,25 +75,21 @@ export default function AdminReservationsAttente() {
   }, []);
 
   function formatLocalDate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
 
-  // Lorsqu’un jour du calendrier est cliqué
   const onDateClick = (date) => {
     setSelectedDate(date);
     const jour = formatLocalDate(date);
     const filtered = reservations
       .filter((r) => r.date === jour)
-      .sort((a, b) => {
-        return a.date.localeCompare(b.date) || a.time.localeCompare(b.time);
-      });
+      .sort((a, b) => a.time.localeCompare(b.time));
     setReservationsDuJour(filtered);
   };
 
-  // tileClassName permet d’ajouter une classe Tailwind selon la date
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const jourStr = formatLocalDate(date);
@@ -152,10 +139,9 @@ export default function AdminReservationsAttente() {
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-semibold text-gray-800">
-        Réservations en attente (Admin)
+        Réservations en attente
       </h2>
 
-      {/* === Conteneur du calendrier === */}
       <div className="bg-white shadow-lg rounded-lg p-4">
         <Calendar
           onClickDay={onDateClick}
@@ -166,7 +152,6 @@ export default function AdminReservationsAttente() {
         />
       </div>
 
-      {/* === Liste des réservations du jour sélectionné === */}
       {selectedDate && (
         <div className="bg-white shadow-lg rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center">
@@ -209,6 +194,13 @@ export default function AdminReservationsAttente() {
                   {/* Contenu en grille */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="flex items-center space-x-2">
+                      <Scissors className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-500">Prestation</p>
+                        <p className="text-base text-gray-700">{res.prestation}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-gray-500" />
                       <div>
                         <p className="text-sm text-gray-500">Heure</p>
@@ -220,54 +212,6 @@ export default function AdminReservationsAttente() {
                       <div>
                         <p className="text-sm text-gray-500">Téléphone</p>
                         <p className="text-base text-gray-700">{res.phone}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Users className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500">Passagers</p>
-                        <p className="text-base text-gray-700">
-                          {res.passengers}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500">Départ</p>
-                        <p className="text-base text-gray-700">{res.location}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-500 rotate-180" />
-                      <div>
-                        <p className="text-sm text-gray-500">Destination</p>
-                        <p className="text-base text-gray-700">
-                          {res.destination}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500">Prix</p>
-                        <p className="text-base text-gray-700">{res.prix} €</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CreditCard className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500">Paiement</p>
-                        <p className="text-base text-gray-700">{res.payment}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <BookOpen className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500">Service</p>
-                        <p className="text-base text-gray-700">
-                          {res.serviceType}
-                        </p>
                       </div>
                     </div>
                   </div>

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Bars3Icon, XMarkIcon, BellIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import useReservationNotifications from "../../hooks/useReservationNotifications";
+import { Link } from "react-router-dom";
 
 export default function AdminNavbar({ toggleSidebar, sidebarOpen }) {
   const [notifOpen, setNotifOpen] = useState(false);
@@ -24,7 +25,7 @@ export default function AdminNavbar({ toggleSidebar, sidebarOpen }) {
 
       {/* Logo / Title */}
       <div className="hidden md:flex items-center">
-        <span className="text-xl font-semibold text-green-600">Admin Panel</span>
+        <span className="text-xl font-semibold text-red-600">Admin Panel</span>
       </div>
 
       {/* Spacer */}
@@ -81,10 +82,10 @@ export default function AdminNavbar({ toggleSidebar, sidebarOpen }) {
             </div>
           )}
         </div>
-        <button className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md transition">
+        <Link to="/dashboard" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md transition">
           <UserCircleIcon className="h-8 w-8 text-gray-600" />
           <span className="hidden sm:block text-gray-700 font-medium">Admin</span>
-        </button>
+        </Link>
       </div>
     </header>
   );

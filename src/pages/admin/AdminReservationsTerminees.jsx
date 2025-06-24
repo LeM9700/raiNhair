@@ -1,4 +1,3 @@
-// src/pages/admin/AdminReservationsTerminees.jsx
 import { useEffect, useState } from "react";
 import { db } from "../../firebase/firebaseConfig";
 import {
@@ -6,24 +5,20 @@ import {
   query,
   where,
   onSnapshot,
-  getDoc,
-  doc,
 } from "firebase/firestore";
 import { Calendar } from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import {
   BookOpen,
   Clock,
-  MapPin,
-  Users,
   Phone as PhoneIcon,
-  DollarSign,
   PhoneCall,
+  Scissors,
 } from "lucide-react";
 
 export default function AdminReservationsTerminees() {
-  const [reservations, setReservations] = useState([]); // toutes les réservations “terminée”
-  const [countByDate, setCountByDate] = useState({}); // ex. { "2025-06-05": 2, ... }
+  const [reservations, setReservations] = useState([]);
+  const [countByDate, setCountByDate] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -37,37 +32,21 @@ export default function AdminReservationsTerminees() {
 
     const unsub = onSnapshot(
       q,
-      async (snapshot) => {
+      (snapshot) => {
         try {
-          const results = await Promise.all(
-            snapshot.docs.map(async (docSnap) => {
-              const data = docSnap.data() || {};
-              let chauffeurData = {};
-              if (data.chauffeurId) {
-                const chauffeurSnap = await getDoc(
-                  doc(db, "users", data.chauffeurId)
-                );
-                chauffeurData = chauffeurSnap.exists()
-                  ? chauffeurSnap.data()
-                  : {};
-              }
-              return {
-                id: docSnap.id,
-                name: data.name || "Inconnu",
-                phone: data.phone || "Non renseigné",
-                location: data.location || "Non renseigné",
-                destination: data.destination || "Non renseignée",
-                date: data.date || "Date inconnue",   // Format YYYY-MM-DD
-                time: data.time || "Non renseigné",
-                sentAt: data.sentAt || "Non renseigné",
-                prix: data.prix || "0",
-                serviceType: data.serviceType || "Non renseigné",
-                payment: data.payment || "Non renseigné",
-                passengers: data.passengers || "Non renseigné",
-                chauffeur: chauffeurData || {},
-              };
-            })
-          );
+          const results = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data() || {};
+            return {
+              id: docSnap.id,
+              name: data.name || "Inconnu",
+              prestation: data.prestation || "Non renseignée",
+              date: data.date || "Date inconnue", // Format YYYY-MM-DD
+              time: data.time || "Non renseigné",
+              phone: data.phone || "Non renseigné",
+              sentAt: data.sentAt || "Non renseigné",
+              status: data.status || "terminée",
+            };
+          });
 
           // Calcul du nombre de réservations par date
           const counts = results.reduce((acc, r) => {
@@ -93,23 +72,19 @@ export default function AdminReservationsTerminees() {
     return () => unsub();
   }, []);
 
-
-  // Fournit "YYYY-MM-DD" à partir d’un objet Date en heure locale
-function formatLocalDate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-
+  function formatLocalDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
 
   const onDateClick = (date) => {
     setSelectedDate(date);
     const jour = formatLocalDate(date);
     const filtered = reservations
       .filter((r) => r.date === jour)
-      .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+      .sort((a, b) => a.time.localeCompare(b.time));
     setReservationsDuJour(filtered);
   };
 
@@ -151,7 +126,7 @@ function formatLocalDate(date) {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold text-gray-800">
-        Toutes les réservations terminées
+        Réservations terminées
       </h2>
 
       {/* Calendrier avec badge numérique */}
@@ -206,6 +181,13 @@ function formatLocalDate(date) {
                   {/* Contenu en grille */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="flex items-center space-x-2">
+                      <Scissors className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-500">Prestation</p>
+                        <p className="text-base text-gray-700">{res.prestation}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-gray-500" />
                       <div>
                         <p className="text-sm text-gray-500">Heure</p>
@@ -219,77 +201,16 @@ function formatLocalDate(date) {
                         <p className="text-base text-gray-700">{res.phone}</p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Users className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500">Passagers</p>
-                        <p className="text-base text-gray-700">
-                          {res.passengers}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500">Départ</p>
-                        <p className="text-base text-gray-700">{res.location}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-500 rotate-180" />
-                      <div>
-                        <p className="text-sm text-gray-500">Destination</p>
-                        <p className="text-base text-gray-700">
-                          {res.destination}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500">Prix</p>
-                        <p className="text-base text-gray-700">{res.prix} €</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <BookOpen className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <p className="text-sm text-gray-500">Service</p>
-                        <p className="text-base text-gray-700">
-                          {res.serviceType}
-                        </p>
-                      </div>
-                    </div>
                   </div>
 
-                  {/* Chauffeur assigné */}
-                  <div className="mt-4 p-3 bg-gray-100 rounded">
-                    <h4 className="font-semibold mb-1 text-gray-800">
-                      Chauffeur assigné :
-                    </h4>
-                    <p className="text-sm text-gray-700">
-                      Nom : {res.chauffeur?.name || "N/A"}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      Téléphone : {res.chauffeur?.phone || "N/A"}
-                    </p>
-                  </div>
-
-                  {/* Actions : appel client + appel chauffeur */}
+                  {/* Action : appel client */}
                   <div className="mt-4 flex flex-wrap justify-center items-center gap-4">
                     <a
                       href={`tel:${res.phone}`}
-                      className="flex items-center space-x-2 text-red-600 hover:text-red-800 transition"
+                      className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition"
                     >
                       <PhoneCall className="w-6 h-6" />
-                      <span className="text-sm font-medium">Appeler Client</span>
-                    </a>
-                    <a
-                      href={`tel:${res.chauffeur?.phone}`}
-                      className="flex items-center space-x-2 text-red-600 hover:text-red-800 transition"
-                    >
-                      <PhoneCall className="w-6 h-6" />
-                      <span className="text-sm font-medium">Appeler Chauffeur</span>
+                      <span className="text-sm font-medium">Appeler</span>
                     </a>
                   </div>
                 </div>
