@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/RAINHAIR/static/css/main.e574d67c.css",
+    "main.js": "/RAINHAIR/static/js/main.019777b1.js",
+    "static/js/453.0df55141.chunk.js": "/RAINHAIR/static/js/453.0df55141.chunk.js",
+    "index.html": "/RAINHAIR/index.html",
+    "main.e574d67c.css.map": "/RAINHAIR/static/css/main.e574d67c.css.map",
+    "main.019777b1.js.map": "/RAINHAIR/static/js/main.019777b1.js.map",
+    "453.0df55141.chunk.js.map": "/RAINHAIR/static/js/453.0df55141.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e574d67c.css",
+    "static/js/main.019777b1.js"
+  ]
+}
