@@ -7,6 +7,9 @@ import {
   where,
   updateDoc,
   doc,
+  deleteDoc,
+  getDoc,
+  increment,
 } from "firebase/firestore";
 import { Calendar } from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -92,6 +95,25 @@ export default function AdminReservationsAcceptees() {
       console.error("Erreur lors de la finalisation :", err);
     }
   };
+
+  const annulerReservation = async (res) => {
+  if (!window.confirm("Annuler cette réservation ?")) return;
+  try {
+    // Supprime la réservation
+    await deleteDoc(doc(db, "reservations", res.id));
+    // Décrémente visites du client sans descendre sous 0
+    const clientRef = doc(db, "clients", res.phone);
+    const clientSnap = await getDoc(clientRef);
+    if (clientSnap.exists()) {
+      const visites = clientSnap.data().visites || 0;
+      if (visites > 0) {
+        await updateDoc(clientRef, { visites: visites - 1 });
+      }
+    }
+  } catch (err) {
+    alert("Erreur lors de l'annulation : " + err.message);
+  }
+};
 
   const onDateClick = (date) => {
     setSelectedDate(date);
@@ -232,6 +254,12 @@ export default function AdminReservationsAcceptees() {
                       className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
                     >
                       Marquer terminé
+                    </button>
+                    <button
+                      onClick={() => annulerReservation(res)}
+                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+                    >
+                      Annuler
                     </button>
                   </div>
                 </div>

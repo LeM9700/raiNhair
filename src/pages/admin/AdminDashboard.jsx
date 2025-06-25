@@ -5,6 +5,13 @@ import { db } from "../../firebase/firebaseConfig";
 import useReservationNotifications from "../../hooks/useReservationNotifications";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
+const PERIODS = [
+  { label: "Jour", value: "day" },
+  { label: "Semaine", value: "week" },
+  { label: "Mois", value: "month" },
+  { label: "Année", value: "year" },
+];
+
 export default function AdminDashboard() {
   useReservationNotifications();
 
@@ -12,9 +19,11 @@ export default function AdminDashboard() {
   const [pendingCount, setPendingCount] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
   const [finishedCount, setFinishedCount] = useState(0);
-  const [nextReservations, setNextReservations] = useState([]);
+  const [nextPending, setNextPending] = useState([]);
+  const [nextAccepted, setNextAccepted] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [chartData, setChartData] = useState([]);
+  const [period, setPeriod] = useState("month");
 
   // Récupération des données Firestore
   useEffect(() => {
@@ -24,10 +33,17 @@ export default function AdminDashboard() {
     getDocs(query(collection(db, "reservations"), where("status", "==", "en attente"))).then((snap) => setPendingCount(snap.size));
     getDocs(query(collection(db, "reservations"), where("status", "==", "acceptée"))).then((snap) => setAcceptedCount(snap.size));
     getDocs(query(collection(db, "reservations"), where("status", "==", "terminée"))).then((snap) => setFinishedCount(snap.size));
-    // Prochains rendez-vous (ex : 5 prochains)
-    getDocs(query(collection(db, "reservations"), where("status", "in", ["en attente", "acceptée"]), orderBy("date"), limit(5)))
+    // Prochains rendez-vous en attente
+    getDocs(query(collection(db, "reservations"), where("status", "==", "en attente"), orderBy("date"), limit(5)))
       .then((snap) => {
-        setNextReservations(
+        setNextPending(
+          snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
+      });
+    // Prochains rendez-vous acceptés
+    getDocs(query(collection(db, "reservations"), where("status", "==", "acceptée"), orderBy("date"), limit(5)))
+      .then((snap) => {
+        setNextAccepted(
           snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
         );
       });
@@ -43,21 +59,34 @@ export default function AdminDashboard() {
           }))
         );
       });
-    // Graphique d'évolution (ex : nombre de réservations par mois)
+    // Graphique d'évolution dynamique
     getDocs(collection(db, "reservations")).then((snap) => {
-      const byMonth = {};
+      const byPeriod = {};
       snap.docs.forEach((doc) => {
         const d = doc.data();
         const date = d.date?.toDate ? d.date.toDate() : new Date(d.date);
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-        byMonth[key] = (byMonth[key] || 0) + 1;
+        let key = "";
+        if (period === "day") {
+          key = date.toLocaleDateString("fr-FR");
+        } else if (period === "week") {
+          // Semaine ISO
+          const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+          const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+          const week = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+          key = `${date.getFullYear()}-S${week}`;
+        } else if (period === "month") {
+          key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        } else if (period === "year") {
+          key = `${date.getFullYear()}`;
+        }
+        byPeriod[key] = (byPeriod[key] || 0) + 1;
       });
-      const data = Object.entries(byMonth)
+      const data = Object.entries(byPeriod)
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([month, count]) => ({ month, count }));
+        .map(([period, count]) => ({ period, count }));
       setChartData(data);
     });
-  }, []);
+  }, [period]);
 
   return (
     <div className="p-4">
@@ -83,11 +112,22 @@ export default function AdminDashboard() {
       </div>
       {/* Graphique d'évolution */}
       <div className="bg-white shadow rounded-lg p-6 mb-8">
-        <h2 className="text-lg font-semibold mb-4">Évolution des réservations (par mois)</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Évolution des réservations</h2>
+          <select
+            className="border rounded px-2 py-1 text-sm"
+            value={period}
+            onChange={e => setPeriod(e.target.value)}
+          >
+            {PERIODS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
         <ResponsiveContainer width="100%" height={250}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
+            <XAxis dataKey="period" />
             <YAxis allowDecimals={false} />
             <Tooltip />
             <Line type="monotone" dataKey="count" stroke="#ef4444" strokeWidth={2} />
@@ -95,24 +135,50 @@ export default function AdminDashboard() {
         </ResponsiveContainer>
       </div>
       {/* Prochains rendez-vous */}
-      <div className="bg-white shadow rounded-lg p-6 mb-8">
-        <h2 className="text-lg font-semibold mb-4">Prochains rendez-vous</h2>
-        <ul>
-          {nextReservations.length === 0 ? (
-            <li className="text-gray-500">Aucun rendez-vous à venir.</li>
-          ) : (
-            nextReservations.map((r) => (
-              <li key={r.id} className="mb-2">
-                <span className="font-medium">{r.clientName || "Client"}</span> —{" "}
-                {r.date?.toDate
-                  ? r.date.toDate().toLocaleString("fr-FR")
-                  : new Date(r.date).toLocaleString("fr-FR")}{" "}
-                <span className="text-xs text-gray-500">({r.status})</span>
-              </li>
-            ))
-          )}
-        </ul>
-      </div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+  <div className="bg-white shadow rounded-lg p-6">
+    <h2 className="text-lg font-semibold mb-4">Prochains rendez-vous <span className="text-yellow-500">en attente</span></h2>
+    <ul>
+      {nextPending.length === 0 ? (
+        <li className="text-gray-500">Aucun rendez-vous en attente.</li>
+      ) : (
+        nextPending.map((r) => (
+          <li key={r.id} className="mb-2">
+            <span className="font-medium">{r.name || r.clientName || "Client"}</span> —{" "}
+            {r.date?.toDate
+              ? r.date.toDate().toLocaleDateString("fr-FR")
+              : new Date(r.date).toLocaleDateString("fr-FR")}
+            {" à "}
+            <span className="font-semibold">{r.time}</span>
+            {" "}
+            <span className="text-xs text-gray-500">({r.status})</span>
+          </li>
+        ))
+      )}
+    </ul>
+  </div>
+  <div className="bg-white shadow rounded-lg p-6">
+    <h2 className="text-lg font-semibold mb-4">Prochains rendez-vous <span className="text-blue-500">acceptés</span></h2>
+    <ul>
+      {nextAccepted.length === 0 ? (
+        <li className="text-gray-500">Aucun rendez-vous accepté.</li>
+      ) : (
+        nextAccepted.map((r) => (
+          <li key={r.id} className="mb-2">
+            <span className="font-medium">{r.name || r.clientName || "Client"}</span> —{" "}
+            {r.date?.toDate
+              ? r.date.toDate().toLocaleDateString("fr-FR")
+              : new Date(r.date).toLocaleDateString("fr-FR")}
+            {" à "}
+            <span className="font-semibold">{r.time}</span>
+            {" "}
+            <span className="text-xs text-gray-500">({r.status})</span>
+          </li>
+        ))
+      )}
+    </ul>
+  </div>
+</div>
       {/* Alertes */}
       {alerts.length > 0 && (
         <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-8 rounded">
@@ -120,7 +186,7 @@ export default function AdminDashboard() {
           <ul className="list-disc pl-6">
             {alerts.map((a) => (
               <li key={a.id}>
-                Réservation en attente pour <span className="font-medium">{a.clientName || "Client"}</span> depuis plus de 2 jours.
+                Réservation en attente pour <span className="font-medium">{a.name || a.clientName || "Client"}</span> depuis plus de 2 jours.
               </li>
             ))}
           </ul>

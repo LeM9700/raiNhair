@@ -22,7 +22,7 @@ export default function ListClients() {
   useEffect(() => {
     // Filtre role == "client" et tri par createdAt asc
     const q = query(
-      collection(db, "client"),
+      collection(db, "clients"),
       orderBy("createdAt", "asc")
     );
 
@@ -37,6 +37,7 @@ export default function ListClients() {
               name: data.name || "–",
               phone: data.phone || "–",
               createdAt: data.createdAt || null,
+              visites: data.visites || 0, // <-- Ajoute cette ligne
             };
           });
           setClients(list);
@@ -128,8 +129,9 @@ export default function ListClients() {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">Email :</span>
-                  <span className="text-sm text-gray-700">{c.email}</span>
+                  <span className="text-sm text-gray-600 font-semibold">
+                    Nombre de visites : <span className="text-gray-900">{c.visites}</span>
+                  </span>
                 </div>
               </CardContent>
 

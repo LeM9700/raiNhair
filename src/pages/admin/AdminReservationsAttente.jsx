@@ -15,6 +15,9 @@ import {
   doc,
   query,
   where,
+  deleteDoc,
+  getDoc,
+  increment,
 } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 
@@ -129,6 +132,24 @@ export default function AdminReservationsAttente() {
     }
   };
 
+  // Fonction d'annulation
+const annulerReservation = async (res) => {
+  if (!window.confirm("Annuler cette réservation ?")) return;
+  try {
+    await deleteDoc(doc(db, "reservations", res.id));
+    const clientRef = doc(db, "clients", res.phone);
+    const clientSnap = await getDoc(clientRef);
+    if (clientSnap.exists()) {
+      const visites = clientSnap.data().visites || 0;
+      if (visites > 0) {
+        await updateDoc(clientRef, { visites: visites - 1 });
+      }
+    }
+  } catch (err) {
+    alert("Erreur lors de l'annulation : " + err.message);
+  }
+};
+
   if (error)
     return (
       <div className="text-red-600">❌ Erreur de chargement des réservations.</div>
@@ -223,6 +244,12 @@ export default function AdminReservationsAttente() {
                       className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
                     >
                       Accepter la réservation
+                    </button>
+                    <button
+                      onClick={() => annulerReservation(res)}
+                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+                    >
+                      Annuler
                     </button>
                     <a
                       href={`tel:${res.phone}`}
