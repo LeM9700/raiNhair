@@ -59,7 +59,7 @@ export default function ListClients() {
   const handleDelete = async (id) => {
     if (window.confirm("Voulez-vous vraiment supprimer ce client ?")) {
       try {
-        await deleteDoc(doc(db, "users", id));
+        await deleteDoc(doc(db, "clients", id));
       } catch (err) {
         console.error("Échec suppression client :", err);
       }

@@ -3,13 +3,16 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 import { toast } from 'react-toastify';
 
+
 export default function useReservationNotifications() {
   const isFirstLoad = useRef(true);
   const [hasNewReservation, setHasNewReservation] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const audioRef = useRef(null);
 
   useEffect(() => {
-    audioRef.current = new Audio('/sounds/notification.mp3');
+    audioRef.current = new Audio('../../public/sounds/notification.mp3');
   }, []);
 
   useEffect(() => {
@@ -18,6 +21,13 @@ export default function useReservationNotifications() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (isFirstLoad.current) {
         isFirstLoad.current = false;
+        setNotifications(snapshot.docs.map(doc => ({
+          id: doc.id,
+          title: `Réservation de ${doc.data().name}`,
+          text: doc.data().prestation || '',
+          date: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date(),
+        })));
+        setUnreadCount(snapshot.size);
         return;
       }
 
@@ -27,9 +37,17 @@ export default function useReservationNotifications() {
           toast.info(`🚕 Nouvelle réservation de ${data.name} !`);
           setHasNewReservation(true);
 
-          if (document.hidden) {  // veille onglet inactif
-          playNotification();
-        }
+          // Ajoute la notification à la liste
+          setNotifications(prev => [
+            {
+              id: change.doc.id,
+              title: `Réservation de ${data.name}`,
+              text: data.prestation || '',
+              date: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+            },
+            ...prev,
+          ]);
+          setUnreadCount(prev => prev + 1);
 
           // Son
           if (audioRef.current) {
@@ -44,14 +62,8 @@ export default function useReservationNotifications() {
       });
     });
 
-
     return () => unsubscribe();
   }, []);
 
-    const playNotification = () => {
-    const audio = new Audio('/sounds/notification.mp3'); 
-    audio.play();
-  };
-
-  return { hasNewReservation, setHasNewReservation };
+  return { hasNewReservation, setHasNewReservation, notifications, unreadCount };
 }
