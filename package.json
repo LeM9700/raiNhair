@@ -24,7 +24,7 @@
     "recharts": "^3.0.0",
     "web-vitals": "^2.1.4"
   },
-  "homepage": "https://lem9700.github.io/raiNhair/",
+  "homepage": "https://lem9700.github.io/raiNhair",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
