@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/raiNhair/static/css/main.e574d67c.css",
-    "main.js": "/raiNhair/static/js/main.0f04c69c.js",
+    "main.js": "/raiNhair/static/js/main.9774686f.js",
     "static/js/453.0df55141.chunk.js": "/raiNhair/static/js/453.0df55141.chunk.js",
     "index.html": "/raiNhair/index.html",
     "main.e574d67c.css.map": "/raiNhair/static/css/main.e574d67c.css.map",
-    "main.0f04c69c.js.map": "/raiNhair/static/js/main.0f04c69c.js.map",
+    "main.9774686f.js.map": "/raiNhair/static/js/main.9774686f.js.map",
     "453.0df55141.chunk.js.map": "/raiNhair/static/js/453.0df55141.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e574d67c.css",
-    "static/js/main.0f04c69c.js"
+    "static/js/main.9774686f.js"
   ]
 }
