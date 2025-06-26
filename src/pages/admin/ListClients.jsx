@@ -4,7 +4,6 @@ import { db } from "../../firebase/firebaseConfig";
 import {
   collection,
   query,
-  where,
   orderBy,
   onSnapshot,
   deleteDoc,
@@ -114,12 +113,16 @@ export default function ListClients() {
                   </a>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                 <div className="flex items-center space-x-2">
                   <CalendarIcon className="w-5 h-5 text-gray-600" />
                   <span className="text-sm text-gray-500">
                     Enregistré le :{" "}
                     {c.createdAt
-                      ? new Date(c.createdAt.toDate()).toLocaleDateString("fr-FR", {
+                      ? (
+                          typeof c.createdAt.toDate === "function"
+                            ? c.createdAt.toDate()
+                            : new Date(c.createdAt)
+                        ).toLocaleDateString("fr-FR", {
                           day: "2-digit",
                           month: "long",
                           year: "numeric",

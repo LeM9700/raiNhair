@@ -65,5 +65,12 @@ export default function useReservationNotifications() {
     return () => unsubscribe();
   }, []);
 
-  return { hasNewReservation, setHasNewReservation, notifications, unreadCount };
+   return {
+    hasNewReservation,
+    setHasNewReservation,
+    notifications,
+    unreadCount,
+    setNotifications, // expose le setter
+    setUnreadCount,   // expose le setter
+  };
 }
